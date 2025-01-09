@@ -1,0 +1,76 @@
+name: CI/CD Pipeline for Docker Deployment
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Images to Docker Hub
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Ensure Docker is Installed
+        run: |
+          if ! [ -x "$(command -v docker)" ]; then
+            echo "Docker is not installed. Installing Docker..."
+            sudo apt update
+            sudo apt install -y docker.io
+            sudo systemctl start docker
+            sudo systemctl enable docker
+            echo "Docker installed successfully!"
+          else
+            echo "Docker is already installed."
+          fi
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Frontend Image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/frontend:latest ./frontend
+          docker push ${{ secrets.DOCKER_USERNAME }}/frontend:latest
+
+      - name: Build and Push Backend Image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/backend:latest ./backend
+          docker push ${{ secrets.DOCKER_USERNAME }}/backend:latest
+
+  deploy:
+    name: Deploy to AWS EC2
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Deploy Application
+        env:
+          HOST: ${{ secrets.AWS_EC2_HOST }}
+          USER: ${{ secrets.AWS_EC2_USER }}
+        run: |
+          # Copy the docker-compose.yml file to EC2 using the RSA private key
+          scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no docker-compose.yml $USER@$HOST:/home/$USER/docker-compose.yml
+
+          # SSH into EC2 and deploy using docker-compose
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
+            # Stop and remove old containers
+            docker-compose down --remove-orphans
+
+            # Pull the latest images from Docker Hub
+            docker-compose pull
+
+            # Start the services
+            docker-compose up -d
+          EOF
