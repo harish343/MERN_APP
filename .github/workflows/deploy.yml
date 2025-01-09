@@ -1,9 +1,7 @@
 name: CI/CD Pipeline for Docker Deployment
 
 on:
-  push:
-    branches:
-      - master
+  workflow_dispatch:
 
 jobs:
   build-and-push:
@@ -62,6 +60,8 @@ jobs:
           HOST: ${{ secrets.AWS_EC2_HOST }}
           USER: ${{ secrets.AWS_EC2_USER }}
         run: |
+          ls 
+          pwd
           # Copy the docker-compose.yml file to EC2 using the RSA private key
           scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no docker-compose.yml $USER@$HOST:/home/$USER/docker-compose.yml
 
