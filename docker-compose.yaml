@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  frontend:
+    image: harish343/frontend:latest
+    container_name: vite_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+  backend:
+    image: harish343/backend:latest
+    container_name: node_backend
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/moviesApp
+      - PORT=3000
+      - NODE_ENV=production
+      - JWT_SECRET=alskdfjlkasdfjlksa23123asdlfk
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:6.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
