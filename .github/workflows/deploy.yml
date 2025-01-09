@@ -65,7 +65,7 @@ jobs:
           ls 
           pwd
           # Copy the docker-compose.yml file to EC2 using the RSA private key
-          scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no docker-compose.yml $USER@$HOST:/home/$USER/docker-compose.yml
+          scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no docker-compose.yaml $USER@$HOST:/home/$USER/docker-compose.yaml
 
           # SSH into EC2 and deploy using docker-compose
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
