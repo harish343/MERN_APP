@@ -94,7 +94,7 @@ const AllMovies = () => {
               <input
                 type="text"
                 className="w-[100%] h-[5rem] border px-10 outline-none rounded"
-                placeholder="Search Movie"
+                placeholder="Search Movie2"
                 value={moviesFilter.searchTerm}
                 onChange={handleSearchChange}
               />
